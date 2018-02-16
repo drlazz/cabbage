@@ -17,6 +17,7 @@ before_script:
 - cd /Users/travis/build/rorywalsh/
 - git clone https://github.com/WeAreROLI/JUCE.git
 - cd JUCE/extras/Projucer/JuceLibraryCode
+- git checkout tags/5.2.0
 - sed -i '' "s/#define JUCER_ENABLE_GPL_MODE 1/#define JUCER_ENABLE_GPL_MODE 1/" AppConfig.h
 - sed -i '' "s/#define JUCE_USE_DARK_SPLASH_SCREEN 1/#define JUCE_USE_DARK_SPLASH_SCREEN 0/" AppConfig.h
 - cat AppConfig.h
