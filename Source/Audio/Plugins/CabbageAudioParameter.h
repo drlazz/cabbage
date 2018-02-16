@@ -23,37 +23,6 @@
 #include "../../CabbageCommonHeaders.h"
 #include "CabbagePluginProcessor.h"
 
-class CabbageAudioParameter : public AudioParameterFloat
-{
 
-public:
-    CabbageAudioParameter (ValueTree wData, Csound& csound, String channel, String name, float minValue, float maxValue, float def, float incr, float skew)
-        : AudioParameterFloat (name, channel, NormalisableRange<float> (minValue, maxValue, incr, skew), def),  currentValue (def), widgetName (name), channel (channel), csound (csound)
-    {
-       // widgetType = CabbageWidgetData::getStringProp (widgetData, CabbageIdentifierIds::type);
-    }
-    ~CabbageAudioParameter() {}
-
-    float getValue() const override
-    {
-        return range.convertTo0to1 (currentValue);
-    }
-
-    void setValue (float newValue) override
-    {
-        csound.SetChannel (channel.toUTF8(), range.convertFrom0to1 (newValue));
-        currentValue = range.convertFrom0to1 (newValue);
-    }
-
-    const String getWidgetName() {   return widgetName;  }
-
-    String channel;
-    String widgetName;
-    //ValueTree widgetData;
-    //String widgetType;
-    float currentValue;
-
-    Csound csound;
-};
 
 #endif  // AUDIOPRAMATERS_H_INCLUDED

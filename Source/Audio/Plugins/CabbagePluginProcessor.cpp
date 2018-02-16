@@ -47,34 +47,38 @@ CabbagePluginProcessor::CabbagePluginProcessor (File inputFile, const int ins, c
 {
 
     //initAllCsoundChannels(cabbageWidgets);
+    createCsound(inputFile);
+}
+
+void CabbagePluginProcessor::createCsound(File inputFile, bool shouldCreateParameters)
+{
     if (inputFile.existsAsFile())
     {
-
         StringArray linesFromCsd;
         linesFromCsd.addLines (inputFile.loadFileAsString());
         addImportFiles (linesFromCsd);
-
+        
         parseCsdFile (linesFromCsd);
-
-
+        
+        
         File tempFile = File::createTempFile ("csoundCabbageCsdText");
         tempFile.replaceWithText (linesFromCsd.joinIntoString ("\n")
                                   .replace ("$lt;", "<")
                                   .replace ("&amp;", "&")
                                   .replace ("$quote;", "\"")
                                   .replace ("$gt;", ">"));
-
+        
         //inputFile.getParentDirectory().setAsCurrentWorkingDirectory();
-        setupAndCompileCsound (tempFile, inputFile.getParentDirectory());
-
-        createParameters();
+        setupAndCompileCsound (tempFile, inputFile.getParentDirectory(), samplingRate);
+        
+        if(shouldCreateParameters)
+            createParameters();
+        
         csoundChanList = NULL;
-
+        
         initAllCsoundChannels (cabbageWidgets);
     }
-
 }
-
 CabbagePluginProcessor::~CabbagePluginProcessor()
 {
     for ( auto xyAuto : xyAutomators)
@@ -565,8 +569,8 @@ void CabbagePluginProcessor::createParameters()
                 {
                     const var channel = CabbageWidgetData::getProperty (cabbageWidgets.getChild (i), CabbageIdentifierIds::channel);
                     const float increment = CabbageWidgetData::getNumProp (cabbageWidgets.getChild (i), CabbageIdentifierIds::increment);
-                    addParameter (new CabbageAudioParameter (cabbageWidgets.getChild (i), *getCsound(), channel[0] , name + "_x", 0, 1, value, increment, 1));
-                    addParameter (new CabbageAudioParameter (cabbageWidgets.getChild (i), *getCsound(), channel[1], name + "_y", 0, 1, value, increment, 1));
+                    addParameter (new CabbageAudioParameter (this, cabbageWidgets.getChild (i), *getCsound(), channel[0] , name + "_x", 0, 1, value, increment, 1));
+                    addParameter (new CabbageAudioParameter (this, cabbageWidgets.getChild (i), *getCsound(), channel[1], name + "_y", 0, 1, value, increment, 1));
                 }
 
                 else if (typeOfWidget.contains ("range"))
@@ -581,15 +585,15 @@ void CabbagePluginProcessor::createParameters()
                         const float skew = CabbageWidgetData::getNumProp (cabbageWidgets.getChild (i), CabbageIdentifierIds::sliderskew);
                         const float min = CabbageWidgetData::getNumProp (cabbageWidgets.getChild (i), CabbageIdentifierIds::min);
                         const float max = CabbageWidgetData::getNumProp (cabbageWidgets.getChild (i), CabbageIdentifierIds::max);
-                        addParameter (new CabbageAudioParameter (cabbageWidgets.getChild (i), *getCsound(), channel[0], name + "_min", min, max, minValue, increment, skew));
-                        addParameter (new CabbageAudioParameter (cabbageWidgets.getChild (i), *getCsound(), channel[1], name + "_max", min, max, maxValue, increment, skew));
+                        addParameter (new CabbageAudioParameter (this, cabbageWidgets.getChild (i), *getCsound(), channel[0], name + "_min", min, max, minValue, increment, skew));
+                        addParameter (new CabbageAudioParameter (this, cabbageWidgets.getChild (i), *getCsound(), channel[1], name + "_max", min, max, maxValue, increment, skew));
                     }
                 }
                 else if (typeOfWidget == CabbageWidgetTypes::combobox && channel.isNotEmpty())
                 {
                     const float min = CabbageWidgetData::getNumProp (cabbageWidgets.getChild (i), CabbageIdentifierIds::min);
                     const float max = CabbageWidgetData::getNumProp (cabbageWidgets.getChild (i), CabbageIdentifierIds::comborange);
-                    addParameter (new CabbageAudioParameter (cabbageWidgets.getChild (i), *getCsound(), channel, name, min, max, value, 1, 1));
+                    addParameter (new CabbageAudioParameter (this, cabbageWidgets.getChild (i), *getCsound(), channel, name, min, max, value, 1, 1));
                 }
                 else if (typeOfWidget.contains ("slider") && channel.isNotEmpty())
                 {
@@ -600,12 +604,12 @@ void CabbagePluginProcessor::createParameters()
                                       CabbageWidgetData::getNumProp (cabbageWidgets.getChild (i), CabbageIdentifierIds::max) :
                                       min + 1;
 
-                    addParameter (new CabbageAudioParameter (cabbageWidgets.getChild (i), *getCsound(), channel, name, min, max, value, increment, skew));
+                    addParameter (new CabbageAudioParameter (this, cabbageWidgets.getChild (i), *getCsound(), channel, name, min, max, value, increment, skew));
                 }
                 else
                 {
                     if (channel.isNotEmpty())
-                        addParameter (new CabbageAudioParameter (cabbageWidgets.getChild (i), *getCsound(), channel, name, 0, 1, value, 1, 1));
+                        addParameter (new CabbageAudioParameter (this, cabbageWidgets.getChild (i), *getCsound(), channel, name, 0, 1, value, 1, 1));
                 }
             }
         }
@@ -769,6 +773,11 @@ void CabbagePluginProcessor::setParametersFromXml (XmlElement* e)
     }
 }
 
+//==============================================================================
+void CabbagePluginProcessor::setCabbageParameter(String channel, float value)
+{
+    getCsound()->SetChannel(channel.toUTF8().getAddress(), value);
+}
 //==============================================================================
 void CabbagePluginProcessor::getChannelDataFromCsound()
 {
@@ -987,6 +996,19 @@ CabbageAudioParameter* CabbagePluginProcessor::getParameterForXYPad (String name
     return nullptr;
 }
 
+void CabbagePluginProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
+{
+    if(sampleRate != samplingRate)
+    {
+        samplingRate = sampleRate;
+        resetCsound();
+        createCsound(csdFile, false);
+        
+//        for( auto param : this->getParameters())
+//            dynamic_cast<CabbageAudioParameter*>(param)->csound = getCsound();
+        
+    }
+}
 
 
 

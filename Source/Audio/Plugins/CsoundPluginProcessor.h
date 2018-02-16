@@ -41,7 +41,7 @@ public:
 
     //==============================================================================
     //pass the path to the temp file, along with the path to the original csd file so we can set correct working dir
-    void setupAndCompileCsound (File csdFile, File filePath, bool debugMode = false);
+    void setupAndCompileCsound (File csdFile, File filePath, int sr = 44100, bool debugMode = false);
     void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
     bool isBusesLayoutSupported (const BusesLayout& layouts) const override;
@@ -130,6 +130,7 @@ public:
     virtual void sendChannelDataToCsound();
     virtual void getChannelDataFromCsound() {};
     virtual void initAllCsoundChannels (ValueTree cabbageData);
+    void resetCsound();
     //=============================================================================
     void addMacros (String csdText);
     const String getCsoundOutput();

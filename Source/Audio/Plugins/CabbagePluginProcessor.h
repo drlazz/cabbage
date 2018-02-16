@@ -23,8 +23,10 @@
 #include "CsoundPluginProcessor.h"
 #include "../../Widgets/CabbageWidgetData.h"
 #include "../../CabbageIds.h"
-#include "CabbageAudioParameter.h"
+//#include "CabbageAudioParameter.h"
 #include "../../Widgets/CabbageXYPad.h"
+
+class CabbageAudioParameter;
 
 class CabbagePluginProcessor
     : public CsoundPluginProcessor
@@ -69,10 +71,12 @@ public:
     ~CabbagePluginProcessor();
 
     ValueTree cabbageWidgets;
-    void getChannelDataFromCsound();
-    void triggerCsoundEvents();
+    void createCsound(File inputFile, bool shouldCreateParameters = true);
+    void getChannelDataFromCsound() override;
+    void triggerCsoundEvents() override;
     void addImportFiles (StringArray& lineFromCsd);
     void parseCsdFile (StringArray& linesFromCsd);
+    void setCabbageParameter(String channel, float value);
     void createParameters();
     void updateWidgets (String csdText);
     void handleXmlImport (XmlElement* xml, StringArray& linesFromCsd);
@@ -110,6 +114,7 @@ public:
     //==============================================================================
     void getStateInformation (MemoryBlock& destData) override;
     void setStateInformation (const void* data, int sizeInBytes) override;
+    void prepareToPlay (double sampleRate, int samplesPerBlock) override;
     void setParametersFromXml (XmlElement* e);
     XmlElement savePluginState (String tag, File xmlFile = File());
     void restorePluginState (XmlElement* xmlElement);
@@ -118,6 +123,7 @@ public:
     Array<PlantImportStruct> plantStructs;
 private:
     controlChannelInfo_s* csoundChanList;
+    int samplingRate = 44100;
     int numberOfLinesInPlantCode = 0;
     String pluginName;
     File csdFile;
@@ -128,10 +134,39 @@ private:
     bool xyAutosCreated = false;
     OwnedArray<XYPadAutomator> xyAutomators;
 
+};
 
-
-
-
+class CabbageAudioParameter : public AudioParameterFloat
+{
+    
+public:
+    CabbageAudioParameter (CabbagePluginProcessor* owner, ValueTree wData, Csound& csound, String channel, String name, float minValue, float maxValue, float def, float incr, float skew)
+    : AudioParameterFloat (name, channel, NormalisableRange<float> (minValue, maxValue, incr, skew), def),  currentValue (def), widgetName (name), channel (channel), owner(owner)
+    {
+        // widgetType = CabbageWidgetData::getStringProp (widgetData, CabbageIdentifierIds::type);
+    }
+    ~CabbageAudioParameter() {}
+    
+    float getValue() const override
+    {
+        return range.convertTo0to1 (currentValue);
+    }
+    
+    void setValue (float newValue) override
+    {
+        //csound.SetChannel (channel.toUTF8(), range.convertFrom0to1 (newValue));
+        currentValue = range.convertFrom0to1 (newValue);
+        owner->setCabbageParameter(channel, currentValue);
+        
+    }
+    
+    const String getWidgetName() {   return widgetName;  }
+    
+    String channel;
+    String widgetName;
+    float currentValue;
+    
+    CabbagePluginProcessor* owner;
 };
 
 

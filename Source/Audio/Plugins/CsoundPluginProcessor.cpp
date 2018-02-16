@@ -36,19 +36,21 @@ CsoundPluginProcessor::CsoundPluginProcessor (File csdFile, const int ins, const
 {
 
     //this->getBusesLayout().inputBuses.add(AudioChannelSet::discreteChannels(17));
-
     CabbageUtilities::debug ("Plugin constructor");
-
-
 }
 
 CsoundPluginProcessor::~CsoundPluginProcessor()
 {
-    Logger::setCurrentLogger (nullptr);
+    resetCsound();
+}
 
+void CsoundPluginProcessor::resetCsound()
+{
+    Logger::setCurrentLogger (nullptr);
+    
     CabbageUtilities::debug ("Plugin destructor");
     Logger::setCurrentLogger (nullptr);
-
+    
     if (csound)
     {
         csound = nullptr;
@@ -58,7 +60,7 @@ CsoundPluginProcessor::~CsoundPluginProcessor()
 }
 
 //==============================================================================
-void CsoundPluginProcessor::setupAndCompileCsound (File csdFile, File filePath, bool debugMode)
+void CsoundPluginProcessor::setupAndCompileCsound (File csdFile, File filePath, int sr, bool debugMode)
 {
     csound = new Csound();
     csdFilePath = filePath;
@@ -99,6 +101,8 @@ void CsoundPluginProcessor::setupAndCompileCsound (File csdFile, File filePath, 
     //instrument must at least be stereo
     numCsoundChannels = CabbageUtilities::getIntendedNumberOfChannels (csdFile.loadFileAsString());
     csoundParams->nchnls_override = numCsoundChannels;
+    csoundParams->sample_rate_override = sr;
+    
     csound->SetParams (csoundParams);
 
     if(csdFile.loadFileAsString().contains("<Csound") || csdFile.loadFileAsString().contains("</Csound"))
@@ -435,6 +439,7 @@ void CsoundPluginProcessor::prepareToPlay (double sampleRate, int samplesPerBloc
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+   
 	CabbageUtilities::debug(AudioProcessor::getChannelLayoutOfBus(true, 0).getDescription());
 	CabbageUtilities::debug(AudioProcessor::getChannelLayoutOfBus(false, 0).getDescription());
 }
