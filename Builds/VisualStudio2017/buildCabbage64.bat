@@ -17,7 +17,7 @@ REM "BUILDING THE MAIN APP"
  %PROJUCER% --resave ../../CabbageIDE.jucer
   msbuild Cabbage.sln /p:Configuration=Release /property:Platform=x64
  copy ".\x64\Release\App\Cabbage.exe" ".\x64\Cabbage.exe"
-
+  
  
 REM "BUILDING EFFECT PLUGIN"
  %PROJUCER% --resave ../../CabbagePlugin.jucer
