@@ -117,8 +117,8 @@ void PluginExporter::writePluginFileToDisk (File fc, File csdFile, File VSTData,
                 CabbageUtilities::showMessage ("Error", "Could not copy library binary file. Make sure the two Cabbage .vst files are located in the Cabbage.app folder", &lookAndFeel);
 
             setUniquePluginId (pluginBinary, exportedCsdFile, pluginId);
-           
-            newPList = newPList.replace ("CabbagePlugin", fc.getFileNameWithoutExtension());
+            
+            newPList = newPList.replace ("CabbagePlugin", getInstrumentname(exportedCsdFile));
         }
 
         
@@ -160,6 +160,21 @@ void PluginExporter::writePluginFileToDisk (File fc, File csdFile, File VSTData,
 
 
 
+}
+
+const String PluginExporter::getInstrumentname(File csdFile)
+{
+    StringArray csdLines;
+    csdLines.addLines (csdFile.loadFileAsString());
+    
+    for (auto line : csdLines)
+    {
+        ValueTree temp ("temp");
+        CabbageWidgetData::setWidgetState (temp, line, 0);
+        
+        if (CabbageWidgetData::getStringProp (temp, CabbageIdentifierIds::type) == CabbageWidgetTypes::form)
+            return CabbageWidgetData::getStringProp (temp, CabbageIdentifierIds::caption);
+    }
 }
 
 //==============================================================================

@@ -37,7 +37,8 @@ public:
     void writePluginFileToDisk (File fc, File csdFile, File VSTData, String fileExtension, String pluginId, String manu = "CabbageAudio", bool encrypt = false);
     void addFilesToPluginBundle (File csdFile, File exportDir);
     void exportPlugin (String type, File csdFile, String pluginId, String manu="CabbageAudio", bool encrypt = false);
-
+    const String getInstrumentname(File csdFile);
+    
     String encodeString (File csdFile)
     {
 #ifdef CabbagePro
