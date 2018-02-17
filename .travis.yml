@@ -32,6 +32,7 @@ before_script:
 - mkdir ~/SDKs
 - cp -rf VST_SDK ~/SDKs
 - ls /Users/travis/build/rorywalsh/
+- git checkout develop
 - cd /Users/travis/build/rorywalsh/cabbage/Builds/MacOSX
 
 script:
@@ -81,7 +82,7 @@ before_deploy:
   - git tag -d vBeta
   - git push --force origin :refs/tags/vBeta
   - git tag vBeta -a -m "Latest OSX Beta Build"
-  - git push origin master && git push origin master --tags
+  - git push origin develop && git push origin develop --tags
 
 deploy:
   skip_cleanup: true
